@@ -269,9 +269,6 @@ price_ranges = ["All", "0-500", "501-1000", "1001-1500", "1501-2000"]
 
 if st.session_state.submitted:
 
-    subcategory1 = pd.read_csv('PDFReport_174857000099698943.csv')
-    subcategory1_names = subcategory1['SubCategory'].unique().tolist()
-    subcategory1_names.insert(0, "All")
     col1, col2, col3, col4, col5 = st.columns([5,5,5,5,5])
 
     if option == "Top Performing Variants":
