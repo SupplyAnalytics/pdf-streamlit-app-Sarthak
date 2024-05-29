@@ -181,7 +181,7 @@ def BijnisExpresspdf(subcategory, price_range):
         df = sort_dataframe_by_variant_count(df)
         df['SubCategory'] = 'Bijnis Express - 3 Hours Delivery'
         
-        output_file = 'sample_catalogue.pdf'
+        output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
         max_image_width = 146
         max_image_height = 175
         create_pdf(df, output_file, max_image_width, max_image_height)
@@ -189,7 +189,7 @@ def BijnisExpresspdf(subcategory, price_range):
     except Exception as e:
         print(str(e))
 
-    return "PDF Created"
+    return output_file
 
 
 def TopPerformingpdf(platform, subcategory, price_range):
@@ -339,6 +339,7 @@ def TopPerformingpdf(platform, subcategory, price_range):
         sample = Sample()
         sample.export_data(sample.ac)
         print("Export Done")
+        output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
         df1 = pd.read_csv('PDFReport_174857000099384072.csv')
         df2 = pd.read_csv('PDFReport_174857000099564002.csv')
         df = pd.concat([df1, df2], ignore_index=True)
@@ -347,7 +348,7 @@ def TopPerformingpdf(platform, subcategory, price_range):
     except Exception as e:
         print(str(e))
 
-    return "PDF Created"
+    return output_file
 
 
 def ExportData():
@@ -494,6 +495,13 @@ if st.session_state.submitted:
             # compress_pdf()
         elif option == "Top Performing Variants - Bijnis Express":
             result = BijnisExpresspdf(subcategory, price_ranges)
+            with open(result, "rb") as pdf_file:
+                st.download_button(
+                    label="Download PDF",
+                    data=pdf_file,
+                    file_name="report.pdf",
+                 mime="application/pdf"
+                )
             # compress_pdf()
         else:
             result = None
