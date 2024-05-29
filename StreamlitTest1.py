@@ -15,22 +15,7 @@ from io import BytesIO
 import smtplib
 import tempfile
 
-def BijnisExpresspdf(subcategory, price_range):
-    st.write("BijnisExpresspdf called with parameters:")
-    st.write(f"Platform: {platform}, Subcategory: {subcategory}, Price Range: {price_range}")
-    class Config:
-        CLIENTID = "1000.DQ32DWGNGDO7CV0V1S1CB3QFRAI72K"
-        CLIENTSECRET = "92dfbbbe8c2743295e9331286d90da900375b2b66c"
-        REFRESHTOKEN = "1000.0cd324af15278b51d3fc85ed80ca5c04.7f4492eb09c6ae494a728cd9213b53ce"
-        ORGID = "60006357703"
-        VIEWID = "174857000099698943"
-        WORKSPACEID = "174857000004732522"
-
-    def export_data(client):
-        response_format = "csv"
-        file_path = "PDFReport_174857000099698943.csv"
-        bulk = client.get_bulk_instance(Config.ORGID, Config.WORKSPACEID)
-        bulk.export_data(Config.VIEWID, response_format, file_path)
+def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount):
 
     def resize_image(image, max_width, max_height):
         img = Image.open(image)
@@ -45,7 +30,8 @@ def BijnisExpresspdf(subcategory, price_range):
         subcategory_counts.columns = ['SubCategory', 'Count']
         sorted_subcategories = subcategory_counts.sort_values(by='Count', ascending=False)['SubCategory']
         df['SubCategory'] = pd.Categorical(df['SubCategory'], categories=sorted_subcategories, ordered=True)
-        return df.sort_values('SubCategory')
+        df = df.sort_values('SubCategory')
+        return df
 
     def create_pdf(df, output_file, max_image_width, max_image_height, orientation='portrait'):
         print('Creating PDF')
@@ -61,7 +47,10 @@ def BijnisExpresspdf(subcategory, price_range):
         increased_page_width = 685
         increased_page_height = 1040
 
+        df['Platform'] = pd.Categorical(df['Platform'], categories=['Production', 'Distribution'], ordered=True)
+        df = df.sort_values(by='Platform')
         subcategories = df['SubCategory'].unique()
+
         num_columns = 4
         num_rows = 5
 
@@ -73,13 +62,12 @@ def BijnisExpresspdf(subcategory, price_range):
 
         c = canvas.Canvas(output_file, pagesize=(increased_page_width, increased_page_height))
         styles = getSampleStyleSheet()
-        hyperlink_style = styles["BodyText"]
-        hyperlink_style.fontName = "Helvetica-Bold"
-        hyperlink_style.fontSize = 14
 
         small_image_path = "BijnisLogo.png"
         small_image_width = 140
         small_image_height = 70
+
+        subcategory = None
 
         for subcategory in subcategories:
             subcategory_df = df[df['SubCategory'] == subcategory]
@@ -89,7 +77,7 @@ def BijnisExpresspdf(subcategory, price_range):
                 print(subcategory)
                 print('Creating Logo')
                 c.drawImage(small_image_path, (increased_page_width + margin_rows) - small_image_width, increased_page_height - small_image_height, width=small_image_width, height=small_image_height)
-                print('Creating Subcategory')
+                print('Creating Subcatcategory')
                 subcategory_upper = subcategory.upper()
                 c.setFont("Helvetica-Bold", 25)
                 text_width = c.stringWidth(subcategory_upper, 'Helvetica-Bold', 25)
@@ -108,11 +96,12 @@ def BijnisExpresspdf(subcategory, price_range):
                 product_names = sub_df['ProductName'].tolist()
                 price_ranges = sub_df['Price_Range'].tolist()
                 deeplink_urls = sub_df['App_Deeplink'].tolist()
+                Platforms = sub_df['Platform'].tolist()
 
                 page_has_content = False
                 print('Creating Images')
 
-                for i, (image_url, product_name, price_range, deeplink_url) in enumerate(zip(image_urls, product_names, price_ranges, deeplink_urls)):
+                for i, (image_url, product_name, price_range, deeplink_url, Platform) in enumerate(zip(image_urls, product_names, price_ranges, deeplink_urls, Platforms)):
                     print('In Image Loop')
                     row_index = i // num_columns
                     col_index = i % num_columns
@@ -129,19 +118,35 @@ def BijnisExpresspdf(subcategory, price_range):
                         c.drawImage(ImageReader(img_bytes), x, y, width=max_image_width, height=max_image_height - 30, preserveAspectRatio=True)
                         c.linkURL(deeplink_url, (x, y, x + max_image_width, y + max_image_height - 30))
 
-                        print('Image Drawn')
-                        hex_yellow = "#F26522"
-                        c.setStrokeColor(colors.HexColor(hex_yellow))
+                        df['Platform'] = pd.Categorical(df['Platform'], categories=['Production', 'Distribution'], ordered=True)
+                        df = df.sort_values(by='Platform')
+                        
+                        if Platform == 'Production':
+                            rect_color = colors.HexColor("#F26522")
+                        else:
+                            rect_color = colors.HexColor("#FFCA18")
+                        hex_yellow = "#FFCA18"
+                        c.setStrokeColor(rect_color)
                         c.setLineWidth(4)
-                        c.rect(x, y - 30, max_image_width+10, max_image_height)
+                        c.rect(x, y - 30, max_image_width + 10, max_image_height)
 
                         product_info = f"{product_name}<br/>Rs:{price_range}"
                         hyperlink = f'<a href="{deeplink_url}">{product_info}</a>'
-                        p = Paragraph(hyperlink, hyperlink_style)
-                        pwidth = c.stringWidth(product_name, 'Helvetica-Bold', 14)
-                        p.wrapOn(c, max_image_width, max_image_height)
-                        p.drawOn(c, x + ((max_image_width/2) - (pwidth/2)) + 2, y - 25)
+                        hyperlink_style = styles["BodyText"]
+                        hyperlink_style.fontName = "Helvetica-Bold"
+                        if len(product_name) <= 20:
+                            hyperlink_style.fontSize = 14
+                            p = Paragraph(hyperlink, hyperlink_style)
+                            pwidth = c.stringWidth(product_name, 'Helvetica-Bold', 14)
+                        else:
+                            hyperlink_style.fontSize = 280 / len(product_name)
+                            p = Paragraph(hyperlink, hyperlink_style)
+                            pwidth = c.stringWidth(product_name, 'Helvetica-Bold', 308 / len(product_name)) 
 
+                        print(len(product_name.split()))
+                        print(product_name.split())
+                        p.wrapOn(c, max_image_width, max_image_height)
+                        p.drawOn(c, x + (((max_image_width + 10) / 2) - (pwidth / 2)) , y - 25)
                         page_has_content = True
                     else:
                         print(f"Failed to download image from {image_url}")
@@ -153,203 +158,36 @@ def BijnisExpresspdf(subcategory, price_range):
         c.save()
         print('save')
 
-    try:
-        ac = AnalyticsClient(Config.CLIENTID, Config.CLIENTSECRET, Config.REFRESHTOKEN)
-        # export_data(ac)
-        print("Export Done")
-        
-        df = pd.read_csv('PDFReport_174857000099698943.csv')
-        
-
-        if subcategory != "All":
-            df = df[df['SubCategory'] == subcategory]
-
-        print("Reached Here")
-        
-        if price_range is not None:
-            # min_price, max_price = map(int, price_range.split(' - '))
-
-            # print(min_price)
-            # print(max_price)
-
-        # Filter based on price range
-            df = df[(df['Avg_Price'] >= price_range[0]) & (df['Avg_Price'] <= price_range[1])]
-
-
-
-
-        df = sort_dataframe_by_variant_count(df)
-        df['SubCategory'] = 'Bijnis Express - 3 Hours Delivery'
-        
-        output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
-        max_image_width = 146
-        max_image_height = 175
-        create_pdf(df, output_file, max_image_width, max_image_height)
-    
-    except Exception as e:
-        print(str(e))
-
-    return output_file
-
-
-def TopPerformingpdf(platform, subcategory, price_range):
-    st.write("TopPerformingpdf called with parameters:")
-    st.write(f"Platform: {platform}, Subcategory: {subcategory}, Price Range: {price_range}")
+    # Main execution
     output_file = 'sample_catalogue.pdf'
     max_image_width = 146
     max_image_height = 175
-    orientation = 'portrait'
 
-    class Config:
-        CLIENTID = "1000.DQ32DWGNGDO7CV0V1S1CB3QFRAI72K"
-        CLIENTSECRET = "92dfbbbe8c2743295e9331286d90da900375b2b66c"
-        REFRESHTOKEN = "1000.0cd324af15278b51d3fc85ed80ca5c04.7f4492eb09c6ae494a728cd9213b53ce"
-        ORGID = "60006357703"
-        VIEWID = "174857000099384072"
-        WORKSPACEID = "174857000004732522"
+    df = pd.read_csv('PDFReport_174857000100873355.csv')
 
-    class Sample:
-        ac = AnalyticsClient(Config.CLIENTID, Config.CLIENTSECRET, Config.REFRESHTOKEN)
+    if Platform != "All":
+        df = df[df['Platform'] == Platform]
 
-        def export_data(self, ac):
-            response_format = "csv"
-            file_path_template = "PDFReport_{}.csv"
-            bulk = ac.get_bulk_instance(Config.ORGID, Config.WORKSPACEID)
-            view_ids = ["174857000099384072", "174857000099564002"]
+    if subcategory != "All":
+            df = df[df['SubCategory'] == subcategory]
+       
+    if price_range is not None:
+        df = df[(df['Avg_Price'] >= price_range[0]) & (df['Avg_Price'] <= price_range[1])]
 
-            for view_id in view_ids:
-                file_path = file_path_template.format(view_id)
-                bulk.export_data(view_id, response_format, file_path)
-
-    def resize_image(image, max_width, max_height):
-        img = Image.open(image)
-        img.thumbnail((max_width, max_height))
-        img_bytes = BytesIO()
-        img.save(img_bytes, format='JPEG')
-        img_bytes.seek(0)
-        return img_bytes
-
-    def create_pdf(df, output_file, max_image_width, max_image_height, orientation='portrait'):
-        if orientation == 'portrait':
-            page_width, page_height = portrait(letter)
-        elif orientation == 'landscape':
-            page_width, page_height = landscape(letter)
+    if BijnisExpress is not None:
+        df = df[df['IsBijnisExpress'] == BijnisExpress]
+        df['SubCategory'] = 'Bijnis Express - 3 Hours Delivery'
+    
+    if productcount is not None:
+        if Platform == "Production":
+            df = df[(df['rankPP'] >= productcount[1])]
+        elif Platform == "Distribution":
+            df = df[(df['rankDP'] >= productcount[1])]
         else:
-            raise ValueError("Invalid orientation. Please specify 'portrait' or 'landscape'.")
+            df = df[(df['rankOverall'] >= productcount[1])]
 
-        margin_rows = 10
-        margin_columns = 20
-        increased_page_width = 685
-        increased_page_height = 1100
-
-        df['platform'] = pd.Categorical(df['platform'], categories=['Production', 'Distribution'], ordered=True)
-        df = df.sort_values(by='platform')
-
-        subcategories = df['SubCategory'].unique()
-        num_columns = 4
-        num_rows = 5
-
-        total_width = (max_image_width + margin_columns) * num_columns + margin_columns * (num_columns - 1) + margin_rows * 2
-        total_height = (max_image_height + margin_rows) * num_rows + margin_rows * 2
-
-        x_offset = (increased_page_width - total_width) / 2 + 25
-        y_offset = (increased_page_height - total_height) / 2
-
-        c = canvas.Canvas(output_file, pagesize=(increased_page_width, increased_page_height))
-        styles = getSampleStyleSheet()
-        hyperlink_style = styles["BodyText"]
-        hyperlink_style.fontName = "Helvetica-Bold"
-        hyperlink_style.fontSize = 14
-
-        small_image_path = "BijnisLogo.png"
-        small_image_width = 140
-        small_image_height = 70
-
-        for subcategory in subcategories:
-            c.drawImage(small_image_path, (increased_page_width + margin_rows) - small_image_width, increased_page_height - small_image_height, width=small_image_width, height=small_image_height)
-            subcategory_upper = subcategory.upper()
-            c.setFont("Helvetica-Bold", 25)
-            text_width = c.stringWidth(subcategory_upper, 'Helvetica-Bold', 25)
-            c.drawString((increased_page_width / 2 - text_width / 2), increased_page_height - 40, subcategory_upper)
-
-            text_var = 'Please CLICK on the below product Image'
-            c.setFont("Helvetica", 15)
-            text_width1 = c.stringWidth(text_var, 'Helvetica', 15)
-            c.setFillColor(colors.HexColor("#FFCA18"))
-            c.rect((increased_page_width / 2 - text_width1 / 2) - 5, increased_page_height - 75, text_width1 + 10, 20, fill=True)
-            c.setFillColor(colors.black)
-            c.drawString((increased_page_width / 2 - text_width1 / 2), increased_page_height - 70, text_var)
-
-            sub_df = df[df['SubCategory'] == subcategory].head(num_columns * num_rows)
-            image_urls = sub_df['App_Image'].tolist()
-            product_names = sub_df['ProductName'].tolist()
-            price_ranges = sub_df['Price_Range'].tolist()
-            deeplink_urls = sub_df['App_Deeplink'].tolist()
-            platforms = sub_df['platform'].tolist()
-
-            page_has_content = False
-
-            for i, (image_url, product_name, price_range, deeplink_url, platform) in enumerate(zip(image_urls, product_names, price_ranges, deeplink_urls, platforms)):
-                row_index = i // num_columns
-                col_index = i % num_columns
-                x = x_offset + margin_columns + col_index * (max_image_width + margin_columns)
-                y = y_offset + margin_rows + (num_rows - row_index - 1) * (max_image_height + margin_rows)
-
-                if i > 7:
-                    y =  y - 50
-                
-                if i == 8:
-                    c.line(x_offset, (increased_page_height / 2)+ 30, increased_page_width - x_offset, (increased_page_height / 2) + 30)
-
-                response = requests.get(image_url)
-                if response.status_code == 200:
-                    img_bytes = BytesIO(response.content)
-                    img = Image.open(img_bytes)
-                    img.thumbnail((max_image_width, max_image_height - 30))
-
-                    c.drawImage(ImageReader(img_bytes), x, y, width=max_image_width, height=max_image_height - 30, preserveAspectRatio=True)
-                    c.linkURL(deeplink_url, (x, y, x + max_image_width, y + max_image_height - 30))
-
-                    if platform == 'Production':
-                        rect_color = colors.HexColor("#F26522")
-                    else:
-                        rect_color = colors.HexColor("#FFCA18")
-
-                    c.setStrokeColor(rect_color)
-                    c.setLineWidth(4)
-                    c.rect(x, y - 30, max_image_width+10, max_image_height)
-
-                    product_info = f"{product_name}<br/>Rs:{price_range}"
-                    hyperlink = f'<a href="{deeplink_url}">{product_info}</a>'
-                    p = Paragraph(hyperlink, hyperlink_style)
-                    pwidth = c.stringWidth(product_name, 'Helvetica-Bold', 14)
-                    p.wrapOn(c, max_image_width, max_image_height)
-                    p.drawOn(c, x + ((max_image_width/2) - (pwidth/2)) + 2, y - 25)
-
-                    page_has_content = True
-                else:
-                    print(f"Failed to download image from {image_url}")
-
-            if page_has_content:
-                c.showPage()
-
-        c.save()
-
-    try:
-        sample = Sample()
-        sample.export_data(sample.ac)
-        print("Export Done")
-        output_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf").name
-        df1 = pd.read_csv('PDFReport_174857000099384072.csv')
-        df2 = pd.read_csv('PDFReport_174857000099564002.csv')
-        df = pd.concat([df1, df2], ignore_index=True)
-        create_pdf(df, output_file, max_image_width, max_image_height, orientation)
-        print("PDF Created Successfully")
-    except Exception as e:
-        print(str(e))
-
+    create_pdf(df, output_file, max_image_width, max_image_height)
     return output_file
-
 
 def ExportData():
     class Config:
@@ -357,7 +195,7 @@ def ExportData():
         CLIENTSECRET = "92dfbbbe8c2743295e9331286d90da900375b2b66c"
         REFRESHTOKEN = "1000.0cd324af15278b51d3fc85ed80ca5c04.7f4492eb09c6ae494a728cd9213b53ce"
         ORGID = "60006357703"
-        VIEWID = "174857000099698943"
+        VIEWID = "174857000100873355"
         WORKSPACEID = "174857000004732522"
 
     class sample:
@@ -374,14 +212,13 @@ def ExportData():
 
     try:
         obj = sample()
-        view_ids = ["174857000099698943"]
+        view_ids = ["174857000100873355"]
         obj.export_data(obj.ac)
 
     except Exception as e:
         print(str(e))
 
     return 'Data Export'
-
 
 page_bg_img = '''
 <style>
@@ -406,7 +243,7 @@ if 'submitted' not in st.session_state:
 
 option = st.selectbox(
     "Select the required report:",
-    ["Top Performing Variants","Top Performing Variants - Bijnis Express"],
+    ["Top Performing Variants"],
     index=0,
     placeholder="Select report name...",
 )
@@ -416,10 +253,10 @@ if st.button('Filter'):
     st.session_state.submitted = True
 
 BijnisExpress = None
-platform = None
+Platform = None
 subcategory = None
 price_range = None
-variantcount = None
+productcount = None
 
 
 subcategory_list_df = pd.read_csv('SubcategoryList.csv')
@@ -430,81 +267,44 @@ subcategory_names.insert(0, "All")
 price_ranges = ["All", "0-500", "501-1000", "1001-1500", "1501-2000"]
 
 
-if option == "Top Performing Variants - Bijnis Express": 
-    ExportData()
-
 if st.session_state.submitted:
 
     subcategory1 = pd.read_csv('PDFReport_174857000099698943.csv')
     subcategory1_names = subcategory1['SubCategory'].unique().tolist()
     subcategory1_names.insert(0, "All")
-    col1, col_space1, col2, col_space2, col3, col_space3, col4 = st.columns([5, 0.5, 5, 0.5, 5, 0.5, 5])
+    col1, col2, col3, col4, col5 = st.columns([5,5,5,5,5])
 
     if option == "Top Performing Variants":
         with col1:
-            platform = st.selectbox("Select Platform", ["All", "Production Platform", "Distribution Platform"], index=0)
-            st.write(f"You selected: {platform}")
+            Platform = st.selectbox("Select Platform", ["All", "Production Platform", "Distribution Platform"], index=0)
+            st.write(f"You selected: {Platform}")
         with col2:
             subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
             st.write(f"You selected: {subcategory}")
         with col3:
-            variantcount = st.slider("Select Count", 0, 100, (0, 100), step=5)
-            st.write(f"Top {variantcount} Variants")
+            productcount = st.slider("Select Count", 0, 100, (0, 100), step=5)
+            st.write(f"Top {productcount} Products")
         with col4:
             price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
             st.write(f"You selected: {price_ranges}")
-    if option == "Top Performing Variants - Bijnis Express":     
-        with col1:
-            subcategory = st.selectbox("Select Subcategory", subcategory1_names, index=0)
-            st.write(f"You selected: {subcategory}")
-
-        with col2:
-            price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
-            st.write(f"You selected: {price_ranges}")
-
-
-
-    # if option == "Overall top 10 performing variants in each category":
-    #     with col1:
-    #         platform = st.selectbox("Select Platform", ["All", "Production Platform", "Distribution Platform"], index=0)
-    #         st.write(f"You selected: {platform}")
-        
-    #     with col2:
-    #         subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
-    #         st.write(f"You selected: {subcategory}")
-
-    #     with col3:
-    #         price_range = st.selectbox("Select Price Range", price_ranges, index=0)
-    #         st.write(f"You selected: {price_range}")
-    
-    # if option == "Bijnis Express Top Performing Variants":     
-    #     with col1:
-    #         subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
-    #         st.write(f"You selected: {subcategory}")
-
-    #     with col2:
-    #         price_range = st.selectbox("Select Price Range", price_ranges, index=0)
-    #         st.write(f"You selected: {price_range}")
-
-    
+        with col5:
+            BijnisExpress = st.selectbox("Bijnis Express",[None,"Yes","No"],index=0)
+            st.write(f"You selected: {BijnisExpress}")
 
     # Handle the Download button
-    if st.button('Download', key='download_button'):
+    if st.button('Process', key='download_button'):
+        ExportData()
+        st.write("Exporting From Zoho")
         if option == "Top Performing Variants":
-            result = TopPerformingpdf(platform, subcategory, price_range)
+            result = generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount)
             # compress_pdf()
-        elif option == "Top Performing Variants - Bijnis Express":
-            result = BijnisExpresspdf(subcategory, price_ranges)
             with open(result, "rb") as pdf_file:
                 st.download_button(
-                    label="Download PDF",
-                    data=pdf_file,
-                    file_name="report.pdf",
-                 mime="application/pdf"
+                label="Download PDF",
+                data=pdf_file,
+                file_name="TopSellingProducts.pdf",
+                mime="application/pdf"
                 )
-            # compress_pdf()
-        else:
-            result = None
 
         if result is not None:
             st.write(f"Result: {result}")
