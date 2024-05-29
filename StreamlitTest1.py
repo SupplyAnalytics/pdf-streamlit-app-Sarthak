@@ -273,7 +273,7 @@ if st.session_state.submitted:
 
     if option == "Top Performing Variants":
         with col1:
-            Platform = st.selectbox("Select Platform", ["All", "Production Platform", "Distribution Platform"], index=0)
+            Platform = st.selectbox("Select Platform", ["All", "Production", "Distribution"], index=0)
             st.write(f"You selected: {Platform}")
         with col2:
             subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
