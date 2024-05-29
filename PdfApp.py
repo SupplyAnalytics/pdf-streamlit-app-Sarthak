@@ -155,7 +155,7 @@ def BijnisExpresspdf(subcategory, price_range):
 
     try:
         ac = AnalyticsClient(Config.CLIENTID, Config.CLIENTSECRET, Config.REFRESHTOKEN)
-        export_data(ac)
+        # export_data(ac)
         print("Export Done")
         
         df = pd.read_csv('PDFReport_174857000099698943.csv')
@@ -350,6 +350,37 @@ def TopPerformingpdf(platform, subcategory, price_range):
     return "PDF Created"
 
 
+def ExportData():
+    class Config:
+        CLIENTID = "1000.DQ32DWGNGDO7CV0V1S1CB3QFRAI72K"
+        CLIENTSECRET = "92dfbbbe8c2743295e9331286d90da900375b2b66c"
+        REFRESHTOKEN = "1000.0cd324af15278b51d3fc85ed80ca5c04.7f4492eb09c6ae494a728cd9213b53ce"
+        ORGID = "60006357703"
+        VIEWID = "174857000099698943"
+        WORKSPACEID = "174857000004732522"
+
+    class sample:
+        ac = AnalyticsClient(Config.CLIENTID, Config.CLIENTSECRET, Config.REFRESHTOKEN)
+
+        def export_data(self, ac):
+            response_format = "csv"
+            file_path_template = "PDFReport_{}.csv"
+            bulk = ac.get_bulk_instance(Config.ORGID, Config.WORKSPACEID)
+
+            for view_id in view_ids:
+                file_path = file_path_template.format(view_id)
+                bulk.export_data(view_id, response_format, file_path)
+
+    try:
+        obj = sample()
+        view_ids = ["174857000099698943"]
+        obj.export_data(obj.ac)
+
+    except Exception as e:
+        print(str(e))
+
+    return 'Data Export'
+
 
 page_bg_img = '''
 <style>
@@ -394,9 +425,18 @@ subcategory_list_df = pd.read_csv('SubcategoryList.csv')
 subcategory_names = subcategory_list_df['SubCategory'].unique().tolist()
 subcategory_names.insert(0, "All")
 
+
 price_ranges = ["All", "0-500", "501-1000", "1001-1500", "1501-2000"]
 
+
+if option == "Top Performing Variants - Bijnis Express": 
+    ExportData()
+
 if st.session_state.submitted:
+
+    subcategory1 = pd.read_csv('PDFReport_174857000099698943.csv')
+    subcategory1_names = subcategory1['SubCategory'].unique().tolist()
+    subcategory1_names.insert(0, "All")
     col1, col_space1, col2, col_space2, col3, col_space3, col4 = st.columns([5, 0.5, 5, 0.5, 5, 0.5, 5])
 
     if option == "Top Performing Variants":
@@ -414,7 +454,7 @@ if st.session_state.submitted:
             st.write(f"You selected: {price_ranges}")
     if option == "Top Performing Variants - Bijnis Express":     
         with col1:
-            subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
+            subcategory = st.selectbox("Select Subcategory", subcategory1_names, index=0)
             st.write(f"You selected: {subcategory}")
 
         with col2:
@@ -451,8 +491,10 @@ if st.session_state.submitted:
     if st.button('Download', key='download_button'):
         if option == "Top Performing Variants":
             result = TopPerformingpdf(platform, subcategory, price_range)
+            # compress_pdf()
         elif option == "Top Performing Variants - Bijnis Express":
             result = BijnisExpresspdf(subcategory, price_ranges)
+            # compress_pdf()
         else:
             result = None
 
