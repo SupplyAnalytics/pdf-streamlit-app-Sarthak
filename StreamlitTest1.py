@@ -70,6 +70,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
         subcategory = None
 
         for subcategory in subcategories:
+            st.write(subcategory)
             subcategory_df = df[df['SubCategory'] == subcategory]
             pages = (len(subcategory_df) + num_columns * num_rows - 1) // (num_columns * num_rows)
 
@@ -180,11 +181,11 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
     
     if productcount is not None:
         if Platform == "Production":
-            df = df[(df['rankPP'] >= productcount[1])]
+            df = df[(df['rankPP'] <= productcount[1])]
         elif Platform == "Distribution":
-            df = df[(df['rankDP'] >= productcount[1])]
+            df = df[(df['rankDP'] <= productcount[1])]
         else:
-            df = df[(df['rankOverall'] >= productcount[1])]
+            df = df[(df['rankOverall'] <= productcount[1])]
 
     create_pdf(df, output_file, max_image_width, max_image_height)
     return output_file
@@ -259,7 +260,7 @@ price_range = None
 productcount = None
 
 
-subcategory_list_df = pd.read_csv('SubcategoryList.csv')
+subcategory_list_df = pd.read_csv('PDFReport_174857000100873355.csv')
 subcategory_names = subcategory_list_df['SubCategory'].unique().tolist()
 subcategory_names.insert(0, "All")
 
@@ -279,7 +280,7 @@ if st.session_state.submitted:
             subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
             st.write(f"You selected: {subcategory}")
         with col3:
-            productcount = st.slider("Select Count", 0, 100, (0, 100), step=5)
+            productcount = st.slider("Select Count", 0, 20, (0, 20), step=5)
             st.write(f"Top {productcount} Products")
         with col4:
             price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
