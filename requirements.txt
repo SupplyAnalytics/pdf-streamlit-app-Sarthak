@@ -1,6 +1,6 @@
-pandas
-numpy
 streamlit
-reportlab
+pandas
+pikepdf
 requests
 Pillow
+reportlab

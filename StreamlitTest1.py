@@ -12,11 +12,57 @@ from reportlab.lib import colors
 import requests
 from PIL import Image
 from io import BytesIO
-import smtplib
+import subprocess
+import platform
 import tempfile
+import pikepdf
+import os
+import smtplib
+
+def compress_pdf(input_pdf_path, output_pdf_path, intermediate_pdf_path='intermediate.pdf'):
+    # Validate input PDF path
+    if not os.path.exists(input_pdf_path):
+        raise FileNotFoundError(f"Input PDF file '{input_pdf_path}' does not exist.")
+    
+    # Use pikepdf to save as an intermediate file
+    with pikepdf.open(input_pdf_path) as pdf:
+        pdf.save(intermediate_pdf_path)
+    
+    # Validate intermediate PDF
+    if not os.path.exists(intermediate_pdf_path):
+        raise FileNotFoundError(f"Intermediate PDF file '{intermediate_pdf_path}' was not created.")
+    
+    # Determine Ghostscript executable
+    if platform.system() == 'Windows':
+        gs_paths = [
+            'C:/Program Files/gs/gs10.03.1/bin/gswin64c.exe',
+            'C:/Program Files/gs/gs10.03.1/bin/gswin32c.exe',
+            'C:/Program Files/gs/gs10.00.0/bin/gswin64c.exe',
+            'C:/Program Files/gs/gs10.00.0/bin/gswin32c.exe'
+        ]
+        ghostscript_executable = next((path for path in gs_paths if os.path.exists(path)), None)
+        if ghostscript_executable is None:
+            raise FileNotFoundError("Ghostscript executable not found. Ensure Ghostscript is installed and its path is correct.")
+    else:
+        ghostscript_executable = 'gs'
+    
+    # Ghostscript command to compress the PDF
+    ghostscript_command = [
+        ghostscript_executable, '-sDEVICE=pdfwrite',
+        '-dCompatibilityLevel=1.4',
+        '-dPDFSETTINGS=/ebook',
+        '-dNOPAUSE', '-dQUIET', '-dBATCH',
+        f'-sOutputFile={output_pdf_path}',
+        intermediate_pdf_path
+    ]
+    
+    # Run Ghostscript command
+    try:
+        subprocess.run(ghostscript_command, check=True, stderr=subprocess.PIPE, stdout=subprocess.PIPE)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Ghostscript error: {e.stderr.decode()}")
 
 def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount):
-
     def resize_image(image, max_width, max_height):
         img = Image.open(image)
         img.thumbnail((max_width, max_height))
@@ -161,6 +207,8 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
 
     # Main execution
     output_file = 'sample_catalogue.pdf'
+    compressed_output_file = 'sample_catalogue_compressed.pdf'
+    intermediate_pdf_path = 'intermediate_catalogue.pdf'
     max_image_width = 146
     max_image_height = 175
 
@@ -188,7 +236,10 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
             df = df[(df['rankOverall'] <= productcount[1])]
 
     create_pdf(df, output_file, max_image_width, max_image_height)
-    return output_file
+    
+    compress_pdf(output_file, compressed_output_file, intermediate_pdf_path)
+    
+    return compressed_output_file
 
 def ExportData():
     class Config:
@@ -295,7 +346,6 @@ if st.session_state.submitted:
         st.write("Exporting From Zoho")
         if option == "Top Performing Variants":
             result = generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount)
-            # compress_pdf()
             with open(result, "rb") as pdf_file:
                 st.download_button(
                 label="Download PDF",
