@@ -377,7 +377,10 @@ if st.session_state.submitted:
                 SellerName.insert(0, "All")
                 SellerName1 = st.selectbox("Select SellerName", SellerName, index=0)
                 st.write(f"You selected: {SellerName1}")
-            elif subcategory != 'All':
+            else:
+                SellerName1 = st.selectbox("Select SellerName", SellerName, index=0)
+                st.write(f"You selected: {SellerName1}")
+            if subcategory != 'All':
                 subcategory_list_df1 = subcategory_list_df[subcategory_list_df['SubCategory'] == subcategory]
                 SellerName = subcategory_list_df1['SellerName'].unique().tolist()
                 SellerName.insert(0, "All")
