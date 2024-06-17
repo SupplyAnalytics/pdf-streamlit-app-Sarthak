@@ -21,6 +21,8 @@ import smtplib
 import time
 import re
 
+    
+
 def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount, progress_callback=None):
     def compress_pdf(input_pdf_path, output_pdf_path):
         if not os.path.exists(input_pdf_path):
@@ -71,6 +73,148 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
         if not color_codes:
             color_codes = ['#0000FF']  # Default color
         return color_codes
+    
+    def create_pdf_4by5(df, output_file, max_image_width, max_image_height, orientation='portrait'):
+        print('Creating PDF')
+        if orientation == 'portrait':
+            page_width, page_height = portrait(letter)
+        elif orientation == 'landscape':
+            page_width, page_height = landscape(letter)
+        else:
+            raise ValueError("Invalid orientation. Please specify 'portrait' or 'landscape'.")
+
+        margin_rows = 10  # Set margin space between rows
+        margin_columns = 20  # Set margin space between columns
+        increased_page_width = 685  # Set the increased page width
+        increased_page_height = 1040  # Set the increased page height
+
+        subcategories = df['SubCategory'].unique()
+
+        num_columns = 4  # Adjust as needed
+        num_rows = 5  # Adjust as needed
+
+    # Calculate total width and height including margins
+        total_width = (max_image_width + margin_columns) * num_columns + margin_columns * (num_columns - 1) + margin_rows * 2
+        total_height = (max_image_height + margin_rows) * num_rows + margin_rows * 2
+
+        x_offset = (increased_page_width - total_width) / 2 + 25
+        y_offset = (increased_page_height - total_height) / 2
+
+        c = canvas.Canvas(output_file, pagesize=(increased_page_width, increased_page_height))  # Set page size with increased width and height
+        styles = getSampleStyleSheet()
+
+        small_image_path = "BijnisLogo.png"
+        small_image_width = 140
+        small_image_height = 70
+
+        total_steps = len(subcategories)
+        step = 0
+        start_time = time.time()
+
+        for subcategory in subcategories:
+            subcategory_df = df[df['SubCategory'] == subcategory]
+            pages = (len(subcategory_df) + num_columns * num_rows - 1) // (num_columns * num_rows)  # Calculate number of pages needed
+
+            for page in range(pages):
+                print(subcategory)
+                print('Creating Logo')
+                c.drawImage(small_image_path, (increased_page_width + margin_rows) - small_image_width, increased_page_height - small_image_height, width=small_image_width, height=small_image_height)
+                print('Creating Subcatcategory')
+                subcategory_upper = subcategory.upper()
+                c.setFont("Helvetica-Bold", 25)
+                text_width = c.stringWidth(subcategory_upper, 'Helvetica-Bold', 25)
+                c.drawString((increased_page_width / 2 - text_width / 2), increased_page_height - 40, subcategory_upper)
+
+                text_var = 'Please click on the below product Image'
+                c.setFont("Helvetica", 15)
+                text_width1 = c.stringWidth(text_var, 'Helvetica', 15)
+                c.setFillColor(colors.HexColor("#FFCA18"))
+                c.rect((increased_page_width / 2 - text_width1 / 2) - 5, increased_page_height - 75, text_width1 + 10, 20, fill=True)
+                c.setFillColor(colors.black)
+                c.drawString((increased_page_width / 2 - text_width1 / 2), increased_page_height - 70, text_var)
+
+                sub_df = subcategory_df.iloc[page * num_columns * num_rows:(page + 1) * num_columns * num_rows]  # Limit rows per page
+                image_urls = sub_df['App_Image'].tolist()
+                product_names = sub_df['ProductName'].tolist()
+                price_ranges = sub_df['Price_Range'].tolist()  # Extract price range
+                deeplink_urls = sub_df['App_Deeplink'].tolist()  # Extract deeplink URLs
+
+                page_has_content = False  # Flag to track if the page has content
+                print('Creating Images')
+
+                for i, (image_url, product_name, price_range, deeplink_url) in enumerate(zip(image_urls, product_names, price_ranges, deeplink_urls)):  # Modify loop to include price range
+                    print('In Image Loop')
+                    row_index = i // num_columns
+                    col_index = i % num_columns
+                    x = x_offset + margin_columns + col_index * (max_image_width + margin_columns)
+                    y = y_offset + margin_rows + (num_rows - row_index - 1) * (max_image_height + margin_rows)
+
+                # if i > 7:
+                #     y =  y - 50
+            
+                # if i == 8:
+                #     # c.setDash(1,2)  # Set dash pattern: 1 point on, 2 points off
+                #     # c.setStrokeColor(colors.yellow)
+                #     # c.setLineWidth(8)
+                #     c.line(x_offset, (increased_page_height / 2)+ 30, increased_page_width - x_offset, (increased_page_height / 2) + 30)
+                #     # # c.setDash()
+
+                    response = requests.get(image_url)
+                    if response.status_code == 200:
+                        print('Downloading Images')
+                        img_bytes = BytesIO(response.content)
+                        img = Image.open(img_bytes)
+                        img.thumbnail((max_image_width, max_image_height - 30))  # Adjust height for image to fit the title
+
+                    # Draw the image with margin and add hyperlink
+                        c.drawImage(ImageReader(img_bytes), x, y, width=max_image_width, height=max_image_height - 30, preserveAspectRatio=True)
+                        c.linkURL(deeplink_url, (x, y, x + max_image_width, y + max_image_height - 30))
+
+                        print('Image Drawn')
+
+                    # Draw the outline rectangle
+                        hex_yellow = "#FFCA18"  # Hex color code for yellow
+                        c.setStrokeColor(colors.HexColor(hex_yellow))  # Set the outline color to yellow
+                        c.setLineWidth(4)  # Set the outline thickness
+                        c.rect(x, y - 30, max_image_width+10, max_image_height)  # Draw the outline rectangle
+
+                    # Draw product name and price range inside the yellow box below the image
+                        product_info = f"{product_name}<br/>Rs:{price_range}"
+                        hyperlink = f'<a href="{deeplink_url}">{product_info}</a>'
+                        hyperlink_style = styles["BodyText"]
+                        hyperlink_style.fontName = "Helvetica-Bold"
+                        if len(product_name) <= 21:
+                            hyperlink_style.fontSize = 14
+                            p = Paragraph(hyperlink, hyperlink_style)
+                            pwidth = c.stringWidth(product_name, 'Helvetica-Bold', 14)
+                        else:
+                            hyperlink_style.fontSize = 294 / len(product_name)
+                            p = Paragraph(hyperlink, hyperlink_style)
+                            pwidth = c.stringWidth(product_name, 'Helvetica-Bold', 294 / len(product_name)) 
+
+                        print(len(product_name.split()))
+                        print(product_name.split())
+                        p.wrapOn(c, max_image_width, max_image_height)
+                        p.drawOn(c, x + (((max_image_width)/2) - pwidth/2) , y - 25)
+                        page_has_content = True  # Mark the page as having content
+                    else:
+                        print(f"Failed to download image from {image_url}")
+
+            # Check if the page has content before calling showPage()
+                if page_has_content:
+                    c.showPage()
+                    print('Shown Page')
+            
+            step += 1
+            elapsed_time = time.time() - start_time
+            avg_time_per_step = elapsed_time / step
+            remaining_steps = total_steps - step
+            estimated_time_remaining = avg_time_per_step * remaining_steps
+            if progress_callback:
+                progress_callback(step / total_steps, estimated_time_remaining)
+
+        c.save()
+        print('save')
 
     def create_pdf(df, output_file, max_image_width, max_image_height, orientation='portrait'):
         if orientation == 'portrait':
@@ -273,10 +417,11 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
             else:
              df = df[(df['rankOverall'] <= productcount[1])] 
 
-    print(df)
-    df.to_csv('BijExp.csv')
 
-    create_pdf(df, output_file, max_image_width, max_image_height)
+    if format =='4x5':
+        create_pdf_4by5(df, output_file, max_image_width = 146 , max_image_height = 175)
+    else:
+        create_pdf(df, output_file, max_image_width, max_image_height)
     
     compress_pdf(output_file, compressed_output_file)
     
@@ -364,7 +509,7 @@ price_ranges = ["All", "0-500", "501-1000", "1001-1500", "1501-2000"]
 
 if st.session_state.submitted:
 
-    col1, col2, col3, col4, col5 = st.columns([6.5, 8, 8, 6, 7])
+    col1, col2, col3, col4, col5, col6 = st.columns([9, 8, 9, 5.5, 7, 7])
 
     if option == "Top Performing Variants":
         with col1:
@@ -395,6 +540,11 @@ if st.session_state.submitted:
         with col5:
             price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
             st.write(f"You selected: {price_ranges}")
+        with col6:
+            format = st.selectbox("Select PDF Format", [ "2x3", "4x5"], index=0)
+            st.write(f"You selected: {format}")
+
+
 
     # Handle the Download button
     if st.button('Process', key='download_button'):
