@@ -203,9 +203,8 @@ def generate_catalogue_pdf():
     max_image_height = 175 + 400
     df = pd.read_csv('PDFReport_174857000100873355.csv')
     # df = df[df['ProductName'] == 'Epochlite 432']
-    df = df[df['SuperCategory'] == 'Apparels']
+    df = df[df['SuperCategory'] == 'Footwear']
     df = sort_dataframe_by_variant_count(df)
-    # df = df.head(20)
     create_pdf(df, output_file, max_image_width, max_image_height)
     compress_pdf(output_file, compressed_output_file)
     return compressed_output_file
