@@ -30,13 +30,6 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
         with pikepdf.open(input_pdf_path) as pdf:
             pdf.save(output_pdf_path, compress_streams=True)
 
-    def resize_image(image, max_width, max_height):
-        img = Image.open(image)
-        img.thumbnail((max_width, max_height))
-        img_bytes = BytesIO()
-        img.save(img_bytes, format='JPEG')
-        img_bytes.seek(0)
-        return img_bytes
 
     def sort_dataframe_by_variant_count(df):
         print('sorting')
@@ -149,15 +142,6 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
                     x = x_offset + margin_columns + col_index * (max_image_width + margin_columns)
                     y = y_offset + margin_rows + (num_rows - row_index - 1) * (max_image_height + margin_rows)
 
-                # if i > 7:
-                #     y =  y - 50
-            
-                # if i == 8:
-                #     # c.setDash(1,2)  # Set dash pattern: 1 point on, 2 points off
-                #     # c.setStrokeColor(colors.yellow)
-                #     # c.setLineWidth(8)
-                #     c.line(x_offset, (increased_page_height / 2)+ 30, increased_page_width - x_offset, (increased_page_height / 2) + 30)
-                #     # # c.setDash()
 
                     response = requests.get(image_url)
                     if response.status_code == 200:
@@ -377,17 +361,8 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
 
     df = pd.read_csv('PDFReport_174857000100873355.csv')
     df['SubCategory'] = df['SubCategory'].fillna('')
+    sort_dataframe_by_variant_count(df)
 
-    def remove_dots(text):
-        return text.replace('.', '')
-
-    # if BijnisExpress is not None:
-    #     print(df['IsBijnisExpress'].unique())
-    #     df = df[df['IsBijnisExpress'] == BijnisExpress]
-    #     # df = df[df['IsBijnisExpress'] == 'Yes']
-    #     # print(BijnisExpress)
-    #     # print(df)
-    #     df['SubCategory'] = 'Bijnis Express - 3 Hours Delivery'
 
     if Platform != "All":
         df = df[df['Platform'] == Platform]
@@ -401,23 +376,6 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
     if SellerName1 != "All":
         df = df[df['SellerName'] == SellerName1]
     
-    # if productcount is not None:
-    #     if SellerName1 != "All":
-    #         df = df[(df['rankSeller'] <= productcount[1])]
-    #     else:
-    #         if Platform == "Production":
-    #             df = df[(df['rankPP'] <= productcount[1])]
-    #         elif Platform == "Distribution":
-    #              df = df[(df['rankDP'] <= productcount[1])]
-    #         elif Platform == "BijnisExpress":
-    #             df['SubCategory'] = 'Bijnis Express - 3 Hours Delivery'
-    #         # df['rankBijExp'] = df['rankBijExp'].apply(remove_dots)
-    #             df = df[(df['rankBijExp'] <= productcount[1])]
-    #             print(df['rankBijExp'].unique())
-    #         else:
-    #          df = df[(df['rankOverall'] <= productcount[1])] 
-
-
     if format =='4x5':
         create_pdf_4by5(df, output_file, max_image_width = 146 , max_image_height = 175)
     else:
@@ -465,13 +423,7 @@ def new_variants_pdf( progress_callback=None):
         with pikepdf.open(input_pdf_path) as pdf:
             pdf.save(output_pdf_path, compress_streams=True)
 
-    def resize_image(image, max_width, max_height):
-        img = Image.open(image)
-        img.thumbnail((max_width, max_height))
-        img_bytes = BytesIO()
-        img.save(img_bytes, format='JPEG')
-        img_bytes.seek(0)
-        return img_bytes
+
     
     def sort_dataframe_by_variant_count(df):
         print('sorting')
@@ -790,15 +742,6 @@ if st.session_state.submitted:
             format = st.selectbox("Select PDF Format", [ "2x3", "4x5"], index=0)
             st.write(f"You selected: {format}")
     
-    # if option == "Yesterday Launched Variants":
-    #     col1 = st.columns([9])
-    #     with col1:
-    #         Platform = st.selectbox("Select Platform", ["All", "Production", "Distribution", "BijnisExpress"], index=0)
-    #         st.write(f"You selected: {Platform}")
-        
-
-
-
     
     if st.button('Process', key='download_button'):
 
