@@ -458,7 +458,7 @@ def ExportData():
 
     return 'Data Export'
 
-def new_variants_pdf():
+def new_variants_pdf( progress_callback=None):
     def compress_pdf(input_pdf_path, output_pdf_path):
         if not os.path.exists(input_pdf_path):
             raise FileNotFoundError(f"Input PDF file '{input_pdf_path}' does not exist.")
@@ -542,6 +542,10 @@ def new_variants_pdf():
         small_image_path = "BijnisLogo.png"
         small_image_width = 140
         small_image_height = 70
+
+        total_steps = len(subcategories)
+        step = 0
+        start_time = time.time()
 
         for subcategory in subcategories:
             subcategory_df = df[df['SubCategory'] == subcategory]
@@ -648,6 +652,14 @@ def new_variants_pdf():
 
                 if page_has_content:
                     c.showPage()
+        
+            step += 1
+            elapsed_time = time.time() - start_time
+            avg_time_per_step = elapsed_time / step
+            remaining_steps = total_steps - step
+            estimated_time_remaining = avg_time_per_step * remaining_steps
+            if progress_callback:
+                progress_callback(step / total_steps, estimated_time_remaining)
 
         c.save()
 
@@ -789,6 +801,25 @@ if st.session_state.submitted:
 
     
     if st.button('Process', key='download_button'):
+
+        if option == "Yesterday Launched Variants":   
+            ExportPivotMaster()
+            st.write('Exporting From Zoho')
+            progress_bar = st.progress(0)
+            progress_text = st.empty()
+            def update_progress(progress, estimated_time_remaining):
+                    progress_bar.progress(progress)
+                    progress_text.text(f"Estimated time remaining: {int(estimated_time_remaining)} seconds")
+
+            result = new_variants_pdf(update_progress)
+            with open(result, "rb") as pdf_file:
+                    st.download_button(
+                        label="Download PDF",
+                        data=pdf_file,
+                        file_name="YesterdayLaunchedVariants.pdf",
+                        mime="application/pdf"
+                )
+                    
         if option == "Top Performing Variants":
             ExportData()
             st.write("Exporting From Zoho")
@@ -813,14 +844,5 @@ if st.session_state.submitted:
                 st.write(f"Result: {result}")
 
     
-        if option == "Yesterday Launched Variant":
-            ExportPivotMaster()
-            result = new_variants_pdf()
-            with open(result, "rb") as pdf_file:
-                    st.download_button(
-                        label="Download PDF",
-                        data=pdf_file,
-                        file_name="YesterdayLaunchedVariants.pdf",
-                        mime="application/pdf"
-                )
+        
             
