@@ -196,7 +196,7 @@ def generate_catalogue_pdf():
 
     df = pd.read_csv('PDFReport_174857000100873355.csv')
     df = df[df['SubCategory'] == 'JEANS']
-    df = df.head(20)
+    df = df.head(1)
 
     create_pdf(df, output_file, max_image_width, max_image_height)
     

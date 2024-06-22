@@ -12,12 +12,8 @@ from reportlab.lib import colors
 import requests
 from PIL import Image
 from io import BytesIO
-import subprocess
-import platform
-import tempfile
 import pikepdf
 import os
-import smtplib
 import time
 import re
 
@@ -361,11 +357,14 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
 
     df = pd.read_csv('PDFReport_174857000100873355.csv')
     df['SubCategory'] = df['SubCategory'].fillna('')
-    sort_dataframe_by_variant_count(df)
+    
 
 
     if Platform != "All":
         df = df[df['Platform'] == Platform]
+
+    if supercategory != "All":
+        df = df[df['SuperCategory'] == supercategory]
 
     if subcategory != "All":
         df = df[df['SubCategory'] == subcategory]
@@ -375,6 +374,8 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
 
     if SellerName1 != "All":
         df = df[df['SellerName'] == SellerName1]
+
+    df = sort_dataframe_by_variant_count(df)
     
     if format =='4x5':
         create_pdf_4by5(df, output_file, max_image_width = 146 , max_image_height = 175)
@@ -500,6 +501,7 @@ def new_variants_pdf( progress_callback=None):
         start_time = time.time()
 
         for subcategory in subcategories:
+            print(subcategory)
             subcategory_df = df[df['SubCategory'] == subcategory]
             pages = (len(subcategory_df) + num_columns * num_rows - 1) // (num_columns * num_rows)
 
@@ -509,7 +511,10 @@ def new_variants_pdf( progress_callback=None):
                 c.setFont("Helvetica-Bold", 40)
                 text_width = c.stringWidth(subcategory_upper, 'Helvetica-Bold', 40)
                 c.drawString((increased_page_width / 2 - text_width / 2), increased_page_height - 40, subcategory_upper)
-            
+
+
+
+                print(product_name)
                 sub_df = subcategory_df.iloc[page * num_columns * num_rows:(page + 1) * num_columns * num_rows]
                 image_urls = sub_df['App_Image'].astype(str).tolist()
                 product_names = sub_df['ProductName'].astype(str).tolist()
@@ -694,6 +699,7 @@ Platform = None
 subcategory = None
 price_range = None
 productcount = None
+supercategory = None
 
 subcategory_list_df = pd.read_csv('PDFReport_174857000100873355.csv')
 subcategory_names = subcategory_list_df['SubCategory'].unique().tolist()
@@ -707,38 +713,54 @@ price_ranges = ["All", "0-500", "501-1000", "1001-1500", "1501-2000"]
 
 if st.session_state.submitted:
     if option == "Top Performing Variants":
-        col1, col2, col3, col4, col5, col6 = st.columns([9, 8, 9, 5.5, 7, 7])
+        col1, col2, col3, col4, col5, col6, col7 = st.columns([17, 18, 19, 19, 12, 15, 15])
 
     
         with col1:
             Platform = st.selectbox("Select Platform", ["All", "Production", "Distribution", "BijnisExpress"], index=0)
             st.write(f"You selected: {Platform}")
         with col2:
-            if Platform != 'All':
-                subcategory_list_df1 = subcategory_list_df[subcategory_list_df['Platform'] == Platform]
-                SellerName = subcategory_list_df1['SellerName'].unique().tolist()
-                SellerName.insert(0, "All")
-                SellerName1 = st.selectbox("Select SellerName", SellerName, index=0)
-                st.write(f"You selected: {SellerName1}")
-            else:
-                SellerName1 = st.selectbox("Select SellerName", SellerName, index=0)
-                st.write(f"You selected: {SellerName1}")
+            supercategory = st.selectbox("Select SuperCat", ["All","Footwear","Apparels"])
+            st.write(f"You selected: {supercategory}")
         with col3:
+            if Platform != 'All':
+                if supercategory != 'All':
+                    subcategory_list_df1 = subcategory_list_df[subcategory_list_df['SuperCategory'] == supercategory]
+                    SellerName = subcategory_list_df1['SellerName'].unique().tolist()
+                    SellerName.insert(0, "All")
+                    SellerName1 = st.selectbox("Select SellerName", SellerName, index=0)
+                    st.write(f"You selected: {SellerName1}")
+                else:
+                    subcategory_list_df1 = subcategory_list_df[subcategory_list_df['Platform'] == Platform]
+                    SellerName = subcategory_list_df1['SellerName'].unique().tolist()
+                    SellerName.insert(0, "All")
+                    SellerName1 = st.selectbox("Select SellerName", SellerName, index=0)
+                    st.write(f"You selected: {SellerName1}")
+            else:
+                SellerName1 = st.selectbox("Select Seller", SellerName, index=0)
+                st.write(f"You selected: {SellerName1}")
+        with col4:
             if SellerName1 != 'All':
                 subcategory_list_df1 = subcategory_list_df[subcategory_list_df['SellerName'] == SellerName1]
                 subcategory_names = subcategory_list_df1['SubCategory'].unique().tolist()
                 subcategory_names.insert(0, "All")
-                subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
-            else:
-                subcategory = st.selectbox("Select Subcategory", subcategory_names, index=0)
+                subcategory = st.selectbox("Select Subcat", subcategory_names, index=0)
                 st.write(f"You selected: {subcategory}")
-        with col4:
+            elif supercategory != 'All':
+                subcategory_list_df1 = subcategory_list_df[subcategory_list_df['SuperCategory'] == supercategory]
+                subcategory_names = subcategory_list_df1['SubCategory'].unique().tolist()
+                subcategory_names.insert(0, "All")
+                subcategory = st.selectbox("Select Subcat", subcategory_names, index=0)
+            else:
+                subcategory = st.selectbox("Select Subcat", subcategory_names, index=0)
+                st.write(f"You selected: {subcategory}")
+        with col5:
             productcount = st.slider("Select Count", 0, 20, (0, 24), step=1)
             st.write(f"Top {productcount} Products")
-        with col5:
+        with col6:
             price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
             st.write(f"You selected: {price_ranges}")
-        with col6:
+        with col7:
             format = st.selectbox("Select PDF Format", [ "2x3", "4x5"], index=0)
             st.write(f"You selected: {format}")
     
@@ -784,8 +806,4 @@ if st.session_state.submitted:
                 )
 
             if result is not None:
-                st.write(f"Result: {result}")
-
-    
-        
-            
+                st.write(f"Result: {result}")           
