@@ -20,6 +20,7 @@ import re
     
 
 def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount, progress_callback=None):
+    
     def compress_pdf(input_pdf_path, output_pdf_path):
         if not os.path.exists(input_pdf_path):
             raise FileNotFoundError(f"Input PDF file '{input_pdf_path}' does not exist.")
@@ -230,6 +231,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
         small_image_width = 140
         small_image_height = 70
 
+        #Varaibles for Progress Var
         total_steps = len(subcategories)
         step = 0
         start_time = time.time()
