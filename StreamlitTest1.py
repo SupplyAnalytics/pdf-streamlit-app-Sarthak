@@ -540,7 +540,6 @@ def new_variants_pdf( progress_callback=None):
 
 
 
-                print(product_name)
                 sub_df = subcategory_df.iloc[page * num_columns * num_rows:(page + 1) * num_columns * num_rows]
                 image_urls = sub_df['App_Image'].astype(str).tolist()
                 product_names = sub_df['ProductName'].astype(str).tolist()
@@ -719,7 +718,7 @@ def deeplink(UTMSource,UTMCampaign,UTMMedium,df):
         except Exception as e:
             print(str(e))
 
-    # ExportPivotMaster()
+    ExportPivotMaster()
 
 # Verify if the CSV file was created
     df.to_csv('BijnisDeeplinkPDF.csv')
