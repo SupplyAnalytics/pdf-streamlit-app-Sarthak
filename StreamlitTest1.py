@@ -130,7 +130,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
                 image_urls = sub_df['App_Image'].tolist()
                 product_names = sub_df['ProductName'].tolist()
                 price_ranges = sub_df['Price_Range'].tolist()  # Extract price range
-                deeplink_urls = sub_df['App_Deeplink_y'].tolist()  # Extract deeplink URLs
+                deeplink_urls = sub_df['App_Deeplink'].tolist()  # Extract deeplink URLs
 
                 page_has_content = False  # Flag to track if the page has content
                 print('Creating Images')
@@ -254,7 +254,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
                 image_urls = sub_df['App_Image'].astype(str).tolist()
                 product_names = sub_df['ProductName'].astype(str).tolist()
                 price_ranges = sub_df['Price_Range'].astype(str).tolist()
-                deeplink_urls = sub_df['App_Deeplink_y'].astype(str).tolist()
+                deeplink_urls = sub_df['App_Deeplink'].astype(str).tolist()
                 sizes = sub_df['VariantSize'].astype(str).tolist()
                 colors_list = sub_df['Color'].astype(str).tolist()
 
@@ -401,11 +401,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
     if UTM != "Default":
         df = df.merge(link_df, how='left', on='variantid')
         df.to_csv('Default.csv')
-        # df = df.rename(columns={"App_Deeplink_y": "App_Deeplink"})
-        # df = df.drop(columns=["App_Deeplink_x"], inplace=True)
-        print('dropped')
-        df.to_csv('drop.csv')
-        # df = df.rename(columns={"App_Deeplink_y": "App_Deeplink"})
+        df = df.rename(columns={"App_Deeplink_y": "App_Deeplink"})
     
     if format =='4x5':
         create_pdf_4by5(df, output_file, max_image_width = 146 , max_image_height = 175)
@@ -856,6 +852,9 @@ subcategory = None
 price_range = None
 productcount = None
 supercategory = None
+UTMSource = None,
+UTMCampaign = None,
+UTMMedium = None
 
 subcategory_list_df = pd.read_csv('PDFReport_174857000100873355.csv')
 subcategory_names = subcategory_list_df['SubCategory'].unique().tolist()
@@ -885,6 +884,10 @@ if st.session_state.submitted:
                 st.write(f"You selected: {UTMCampaign}")
                 UTMMedium = st.text_input("Input UTM Medium")
                 st.write(f"You selected: {UTMMedium}")
+            else: 
+                UTMSource = "BI_Campaign"
+                UTMCampaign = "BI_Campaign"
+                UTMMedium = "BI_Campaign"
         with col2:
             supercategory = st.selectbox("Select SuperCat", ["All","Footwear","Apparels"])
             st.write(f"You selected: {supercategory}")
@@ -934,7 +937,7 @@ if st.session_state.submitted:
     if st.button('Process', key='download_button'):
 
         if option == "Yesterday Launched Variants":   
-            # ExportPivotMaster()
+            ExportPivotMaster()
             st.write('Exporting From Zoho')
             progress_bar = st.progress(0)
             progress_text = st.empty()
@@ -952,7 +955,7 @@ if st.session_state.submitted:
                 )
                     
         if option == "Top Performing Variants":
-            # ExportData()
+            ExportData()
             st.write("Exporting From Zoho")
             if option == "Top Performing Variants":
                 progress_bar = st.progress(0)
