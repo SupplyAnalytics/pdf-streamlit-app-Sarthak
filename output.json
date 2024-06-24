@@ -1,0 +1,57 @@
+[
+    {
+        "variantid": 1806733,
+        "response": {
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "1806733": "https://bijnis.app.link/CUfAvxtzDKb"
+            }
+        }
+    },
+    {
+        "variantid": 2445236,
+        "response": {
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2445236": "https://bijnis.app.link/DQtQ9vtzDKb"
+            }
+        }
+    },
+    {
+        "variantid": 1806736,
+        "response": {
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "1806736": "https://bijnis.app.link/bKJcpytzDKb"
+            }
+        }
+    },
+    {
+        "variantid": 1793518,
+        "response": {
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "1793518": "https://bijnis.app.link/027hGAtzDKb"
+            }
+        }
+    },
+    {
+        "variantid": 1799011,
+        "response": {
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "1799011": "https://bijnis.app.link/8eJcIDtzDKb"
+            }
+        }
+    }
+]

@@ -16,10 +16,13 @@ import pikepdf
 import os
 import time
 import re
+import json
+from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
     
 
-def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount, progress_callback=None):
+def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount, UTMSource, UTMCampaign, UTMMedium, progress_callback=None):
     
     def compress_pdf(input_pdf_path, output_pdf_path):
         if not os.path.exists(input_pdf_path):
@@ -127,7 +130,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
                 image_urls = sub_df['App_Image'].tolist()
                 product_names = sub_df['ProductName'].tolist()
                 price_ranges = sub_df['Price_Range'].tolist()  # Extract price range
-                deeplink_urls = sub_df['App_Deeplink'].tolist()  # Extract deeplink URLs
+                deeplink_urls = sub_df['App_Deeplink_y'].tolist()  # Extract deeplink URLs
 
                 page_has_content = False  # Flag to track if the page has content
                 print('Creating Images')
@@ -251,7 +254,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
                 image_urls = sub_df['App_Image'].astype(str).tolist()
                 product_names = sub_df['ProductName'].astype(str).tolist()
                 price_ranges = sub_df['Price_Range'].astype(str).tolist()
-                deeplink_urls = sub_df['App_Deeplink'].astype(str).tolist()
+                deeplink_urls = sub_df['App_Deeplink_y'].astype(str).tolist()
                 sizes = sub_df['VariantSize'].astype(str).tolist()
                 colors_list = sub_df['Color'].astype(str).tolist()
 
@@ -359,6 +362,11 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
 
     df = pd.read_csv('PDFReport_174857000100873355.csv')
     df['SubCategory'] = df['SubCategory'].fillna('')
+
+
+    print(UTMSource)
+    print(UTMCampaign)
+    print(UTMMedium)
     
 
 
@@ -378,6 +386,26 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
         df = df[df['SellerName'] == SellerName1]
 
     df = sort_dataframe_by_variant_count(df)
+    df = df.head(5)
+
+    if UTM == "Default":
+        UTMSource = "BI_Campaign",
+        UTMCampaign = "BI_Campaign",
+        UTMMedium = "BI_Campaign"
+        deeplink(UTMSource,UTMCampaign,UTMMedium,df)
+    else:
+        deeplink(UTMSource,UTMCampaign,UTMMedium,df)
+
+    link_df = pd.read_csv('Postman_Deeplink_Final.csv')
+
+    if UTM != "Default":
+        df = df.merge(link_df, how='left', on='variantid')
+        df.to_csv('Default.csv')
+        # df = df.rename(columns={"App_Deeplink_y": "App_Deeplink"})
+        # df = df.drop(columns=["App_Deeplink_x"], inplace=True)
+        print('dropped')
+        df.to_csv('drop.csv')
+        # df = df.rename(columns={"App_Deeplink_y": "App_Deeplink"})
     
     if format =='4x5':
         create_pdf_4by5(df, output_file, max_image_width = 146 , max_image_height = 175)
@@ -663,6 +691,131 @@ def ExportPivotMaster():
     except Exception as e:
         print(str(e))
 
+def deeplink(UTMSource,UTMCampaign,UTMMedium,df):
+    print(UTMSource)
+    def ExportPivotMaster():
+        class Config:
+            CLIENTID = "1000.DQ32DWGNGDO7CV0V1S1CB3QFRAI72K"
+            CLIENTSECRET = "92dfbbbe8c2743295e9331286d90da900375b2b66c"
+            REFRESHTOKEN = "1000.0cd324af15278b51d3fc85ed80ca5c04.7f4492eb09c6ae494a728cd9213b53ce"
+            ORGID = "60006357703"
+            VIEWID = "174857000104896659"
+            WORKSPACEID = "174857000004732522"
+
+        class Sample:
+            def __init__(self, ac):
+                self.ac = ac
+
+            def export_data(self):
+                response_format = "csv"
+                file_path_template = "BijnisDeeplinkPDF.csv"
+                bulk = self.ac.get_bulk_instance(Config.ORGID, Config.WORKSPACEID)
+
+                for view_id in view_ids:
+                    file_path = file_path_template.format(view_id)
+                    bulk.export_data(view_id, response_format, file_path)
+
+        try:
+            ac = AnalyticsClient(Config.CLIENTID, Config.CLIENTSECRET, Config.REFRESHTOKEN)
+            obj = Sample(ac)
+            view_ids = ["174857000104896659"]
+            obj.export_data()
+        except Exception as e:
+            print(str(e))
+
+    # ExportPivotMaster()
+
+# Verify if the CSV file was created
+    df.to_csv('BijnisDeeplinkPDF.csv')
+    csv_file = 'BijnisDeeplinkPDF.csv'
+    if not os.path.exists(csv_file):
+        print(f"Error: File '{csv_file}' not found. Please check the export process.")
+        exit(1)
+
+# Read the CSV file
+    data = pd.read_csv(csv_file)
+    print(data)
+
+# URL and headers for the API request
+    url = 'https://api.bijnis.com/g/ba/generate/pdplink/'
+    headers = {
+    'Content-Type': 'application/json'
+    }
+
+# Initialize a list to hold all the responses
+    responses = []
+
+# Function to handle individual requests
+    def make_request(variant_id):
+    # Create the payload as specified in the cURL command
+        payload = {
+            "nid": [variant_id],
+            "utmSource": UTMSource,
+            "utmCampaign": UTMCampaign,
+            "utmMedium": UTMMedium
+        }
+
+    # Make the POST request
+        response = requests.post(url, headers=headers, json=payload)
+
+    # Add error handling
+        if response.status_code == 200:
+            return {'variantid': variant_id, 'response': response.json()}
+        else:
+            return {'variantid': variant_id, 'error': response.status_code}
+
+# Use ThreadPoolExecutor to make parallel requests
+    with ThreadPoolExecutor(max_workers=100) as executor:
+    # Submit tasks to the executor
+        futures = {executor.submit(make_request, int(row['variantid'])): int(row['variantid']) for _, row in data.iterrows()}
+
+    # Use tqdm to display a progress bar
+        for future in tqdm(as_completed(futures), total=len(futures)):
+            responses.append(future.result())
+
+# Write all responses to a JSON file
+    json_file = 'output.json'
+    with open(json_file, 'w') as outfile:
+        json.dump(responses, outfile, indent=4)
+
+    print("Data fetching complete. Responses saved to output.json.")
+
+# Verify if the JSON file was created
+    if not os.path.exists(json_file):
+        print(f"Error: File '{json_file}' not found. Please check the path.")
+        exit(1)
+
+# Read the JSON file and extract the required data
+    final_data = []
+
+    try:
+        with open(json_file, 'r') as file:
+            data = json.load(file)
+
+        # Iterate through each JSON object in the array
+            for item in data:
+            # Extract variantId
+                variant_id = item['variantid']
+
+            # Check if 'response' and 'url' keys exist
+                if 'response' in item and 'url' in item['response']:
+                    url = item['response']['url'][str(variant_id)]  # Access URL using variantId as key
+                    final_data.append({'variantid': variant_id, 'App_Deeplink': url})
+                else:
+                    print(f"Warning: Missing 'response' or 'url' key in item with variantid: {variant_id}")
+
+    # Create pandas DataFrame and save to CSV (if data was extracted)
+        if final_data:
+            df = pd.DataFrame(final_data)
+            df.to_csv('Postman_Deeplink_Final.csv', index=False)
+            print('Success! CSV file created.')
+        else:
+            print("Warning: No data extracted due to missing keys in JSON objects.")
+    except FileNotFoundError:
+        print(f"Error: File '{json_file}' not found. Please check the path.")
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON data from '{json_file}'.")
+
 page_bg_img = '''
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Proxima Nova:wght@700&display=swap');
@@ -677,6 +830,7 @@ h1 {
 '''
 
 st.markdown(page_bg_img, unsafe_allow_html=True)
+# ExportPivotMaster()
 
 st.title("The PDF Tool")
 # ExportData()
@@ -715,12 +869,22 @@ price_ranges = ["All", "0-500", "501-1000", "1001-1500", "1501-2000"]
 
 if st.session_state.submitted:
     if option == "Top Performing Variants":
-        col1, col2, col3, col4, col5, col6, col7 = st.columns([17, 18, 19, 19, 12, 15, 15])
+        col1, col2, col3, col4, col5, col6, col7 = st.columns([20, 18, 19, 19, 12, 15, 15])
 
     
         with col1:
             Platform = st.selectbox("Select Platform", ["All", "Production", "Distribution", "BijnisExpress"], index=0)
             st.write(f"You selected: {Platform}")
+        with col1: 
+             
+            UTM = st.selectbox("Select UTM", ["Default", "Custom"], index=0)
+            if UTM == "Custom":
+                UTMSource = st.text_input("Input UTM Source")
+                st.write(f"You selected: {UTMSource}")
+                UTMCampaign = st.text_input("Input UTM Campaign")
+                st.write(f"You selected: {UTMCampaign}")
+                UTMMedium = st.text_input("Input UTM Medium")
+                st.write(f"You selected: {UTMMedium}")
         with col2:
             supercategory = st.selectbox("Select SuperCat", ["All","Footwear","Apparels"])
             st.write(f"You selected: {supercategory}")
@@ -770,7 +934,7 @@ if st.session_state.submitted:
     if st.button('Process', key='download_button'):
 
         if option == "Yesterday Launched Variants":   
-            ExportPivotMaster()
+            # ExportPivotMaster()
             st.write('Exporting From Zoho')
             progress_bar = st.progress(0)
             progress_text = st.empty()
@@ -788,7 +952,7 @@ if st.session_state.submitted:
                 )
                     
         if option == "Top Performing Variants":
-            ExportData()
+            # ExportData()
             st.write("Exporting From Zoho")
             if option == "Top Performing Variants":
                 progress_bar = st.progress(0)
@@ -798,7 +962,7 @@ if st.session_state.submitted:
                     progress_bar.progress(progress)
                     progress_text.text(f"Estimated time remaining: {int(estimated_time_remaining)} seconds")
 
-                result = generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount, update_progress)
+                result = generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, productcount, UTMSource,UTMCampaign,UTMMedium, update_progress)
                 with open(result, "rb") as pdf_file:
                     st.download_button(
                         label="Download PDF",
