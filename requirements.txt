@@ -4,3 +4,4 @@ pikepdf
 requests
 Pillow
 reportlab
+tqdm
