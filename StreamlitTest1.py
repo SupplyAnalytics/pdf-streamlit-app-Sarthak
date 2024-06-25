@@ -387,7 +387,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
 
     if productcount is not None:
         if Platform == "BijnisExpress":
-            df = df[(df['rankBijnisExpress'] <= productcount[1])]
+            df = df[(df['rankBijExp'] <= productcount[1])]
         elif Platform == "Production":
             df = df[(df['rankPP'] <= productcount[1])]
         elif Platform == "Distribution":
