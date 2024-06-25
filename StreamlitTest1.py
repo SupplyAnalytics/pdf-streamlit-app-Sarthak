@@ -413,6 +413,11 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
         df = df.merge(link_df, how='left', on='variantid')
         df.to_csv('Default.csv')
         df = df.rename(columns={"App_Deeplink_y": "App_Deeplink"})
+
+    
+    if Platform == "BijnisExpress":
+        df['SubCategory'] = 'Bijnis Express - 3 Hours Delivery'
+        df = df.sort_values(by='SuperCategory', ascending=True)
        
     
     if format =='4x5':
