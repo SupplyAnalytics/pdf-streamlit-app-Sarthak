@@ -385,23 +385,35 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, BijnisExpress, pr
     if SellerName1 != "All":
         df = df[df['SellerName'] == SellerName1]
 
+    if productcount is not None:
+        if Platform == "BijnisExpress":
+            df = df[(df['rankBijnisExpress'] <= productcount[1])]
+        elif Platform == "Production":
+            df = df[(df['rankPP'] <= productcount[1])]
+        elif Platform == "Distribution":
+            df = df[(df['rankDP'] <= productcount[1])]
+        else:
+            df = df[(df['rankOverall'] <= productcount[1])]
+
     df = sort_dataframe_by_variant_count(df)
-    df = df.head(5)
 
-    if UTM == "Default":
-        UTMSource = "BI_Campaign",
-        UTMCampaign = "BI_Campaign",
-        UTMMedium = "BI_Campaign"
-        deeplink(UTMSource,UTMCampaign,UTMMedium,df)
-    else:
-        deeplink(UTMSource,UTMCampaign,UTMMedium,df)
+    # if UTM == "Default":
+    #     UTMSource = "BI_Campaign",
+    #     UTMCampaign = "BI_Campaign",
+    #     UTMMedium = "BI_Campaign"
+    #     deeplink(UTMSource,UTMCampaign,UTMMedium,df)
+    # else:
+        
 
-    link_df = pd.read_csv('Postman_Deeplink_Final.csv')
+    
 
     if UTM != "Default":
+        deeplink(UTMSource,UTMCampaign,UTMMedium,df)
+        link_df = pd.read_csv('Postman_Deeplink_Final.csv')
         df = df.merge(link_df, how='left', on='variantid')
         df.to_csv('Default.csv')
         df = df.rename(columns={"App_Deeplink_y": "App_Deeplink"})
+       
     
     if format =='4x5':
         create_pdf_4by5(df, output_file, max_image_width = 146 , max_image_height = 175)
