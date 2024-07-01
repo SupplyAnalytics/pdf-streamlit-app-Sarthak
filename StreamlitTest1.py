@@ -51,7 +51,7 @@ def zohoExport(viewid):
 
     return 'Data Export'
 
-def generate_catalogue_pdf(Platform, subcategory, price_range, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, df, progress_callback=None): 
+def generate_catalogue_pdf(Platform, subcategory, price_range, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, df, option, progress_callback=None): 
     def compress_pdf(input_pdf_path, output_pdf_path):
         if not os.path.exists(input_pdf_path):
             raise FileNotFoundError(f"Input PDF file '{input_pdf_path}' does not exist.")
@@ -238,15 +238,18 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, productcount, UTM
         df = df[df['SellerName'] == SellerName]
     if price_range is not None:
         df = df[(df['Avg_Price'] >= price_range[0]) & (df['Avg_Price'] <= price_range[1])]
-    if productcount is not None:
-        if SellerName != "All":
-            df = df[(df['rankSeller'] <= productcount[1])]
-        if Platform == "BijnisExpress":
-            df = df[df['rankBijExp'] <= productcount[1]]
-        elif Platform == "Production":
-            df = df[df['rankPP'] <= productcount[1]]
-        elif Platform == "Distribution":
-            df = df[df['rankDP'] <= productcount[1]]
+    if option != "Yesterday Launched Variants":
+        if productcount is not None:
+            if SellerName != "All":
+                df = df[(df['rankSeller'] <= productcount[1])]
+            if Platform == "BijnisExpress":
+                df = df[df['rankBijExp'] <= productcount[1]]
+            elif Platform == "Production":
+                df = df[df['rankPP'] <= productcount[1]]
+            elif Platform == "Distribution":
+                df = df[df['rankDP'] <= productcount[1]]
+            else:
+                df = df[df['rankOverall'] <= productcount[1]]
 
     if UTM == 'Custom':
         deeplink(UTMSource, UTMCampaign, UTMMedium, df)
@@ -315,7 +318,7 @@ h1 {
             Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName = handle_top_performing_variants(subcategory_list_df)
             if st.button('Process', key='download_button'):
                 viewid = "174857000100873355"
-                # zohoExport(viewid)
+                zohoExport(viewid)
                 df = pd.read_csv('PDFReport_174857000100873355.csv')
                 progress_bar = st.progress(0)
                 progress_text = st.empty()
@@ -324,7 +327,7 @@ h1 {
                     progress_bar.progress(progress)
                     progress_text.text(f"Estimated time remaining: {int(estimated_time_remaining)} seconds")
                 
-                result = generate_catalogue_pdf(Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, df,  update_progress)
+                result = generate_catalogue_pdf(Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, df, option,  update_progress)
                 with open(result, "rb") as pdf_file:
                     st.download_button(
                         label="Download PDF",
@@ -334,7 +337,7 @@ h1 {
                 )
             
         elif option == "Yesterday Launched Variants":
-            Platform, subcategory, price_ranges, productcount, UTMSource, UTMCampaign, UTMMedium = handle_yesterday_launched_variants(new_df)
+            Platform, subcategory, price_ranges, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName = handle_yesterday_launched_variants(new_df)
             if st.button('Process', key='download_button'):
                 viewid = "174857000103979557"
                 zohoExport(viewid)
@@ -344,7 +347,8 @@ h1 {
                 def update_progress(progress, estimated_time_remaining):
                     progress_bar.progress(progress)
                     progress_text.text(f"Estimated time remaining: {int(estimated_time_remaining)} seconds")
-                result = generate_catalogue_pdf(Platform, subcategory, price_ranges, productcount, UTMSource, UTMCampaign, UTMMedium, format, df,  update_progress)
+                productcount = None
+                result = generate_catalogue_pdf(Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, df, option,  update_progress)
                 with open(result, "rb") as pdf_file:
                     st.download_button(
                         label="Download PDF",
@@ -453,17 +457,14 @@ def handle_yesterday_launched_variants(new_df):
         subcategory = st.selectbox("Select Subcat", ["All"] + filtered_subcategories, index=0)
         st.write(f"You selected: {subcategory}")
         
-        productcount = st.slider("Select Count", 0, 100, (0, 100), step=1)
-        st.write(f"Top {productcount} Products")
+        price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
+        st.write(f"You selected: {price_ranges}")
 
         with col4:
             format = st.selectbox("Select PDF Format", ["2x3", "4x5"], index=0)
-            st.write(f"You selected: {format}")
+            st.write(f"You selected: {format}") 
 
-            price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
-            st.write(f"You selected: {price_ranges}")
-
-        return Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName
+        return Platform, subcategory, price_ranges, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName
     
 def deeplink(UTMSource, UTMCampaign, UTMMedium, df):
     # Initialize logging
