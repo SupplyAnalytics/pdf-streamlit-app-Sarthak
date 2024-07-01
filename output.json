@@ -1,232 +1,112 @@
 [
     {
-        "variantid": 2436496,
+        "variantid": 2513133,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2513133": "https://bijnis.app.link/xDNYlO6sSKb"
+            }
         }
     },
     {
-        "variantid": 2201519,
+        "variantid": 2476973,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2476973": "https://bijnis.app.link/jGxVvO6sSKb"
+            }
         }
     },
     {
-        "variantid": 2564827,
+        "variantid": 2497534,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2497534": "https://bijnis.app.link/E0llvO6sSKb"
+            }
         }
     },
     {
-        "variantid": 2298054,
+        "variantid": 2477068,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2477068": "https://bijnis.app.link/owGqGO6sSKb"
+            }
         }
     },
     {
-        "variantid": 2509348,
+        "variantid": 2552854,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2552854": "https://bijnis.app.link/M4gsXO6sSKb"
+            }
         }
     },
     {
-        "variantid": 2509356,
+        "variantid": 2552903,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2552903": "https://bijnis.app.link/Y3Ox4O6sSKb"
+            }
         }
     },
     {
-        "variantid": 2542073,
+        "variantid": 2519021,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2519021": "https://bijnis.app.link/deIAjP6sSKb"
+            }
         }
     },
     {
-        "variantid": 2297881,
+        "variantid": 2535941,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2535941": "https://bijnis.app.link/bEx0mP6sSKb"
+            }
         }
     },
     {
-        "variantid": 2545322,
+        "variantid": 2523612,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2523612": "https://bijnis.app.link/jpFBCP6sSKb"
+            }
         }
     },
     {
-        "variantid": 2461245,
+        "variantid": 2574370,
         "response": {
-            "detail": [
-                {
-                    "loc": [
-                        "body",
-                        "utmSource"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                },
-                {
-                    "loc": [
-                        "body",
-                        "utmCampaign"
-                    ],
-                    "msg": "str type expected",
-                    "type": "type_error.str"
-                }
-            ]
+            "message": "Deep link generated successfully",
+            "responseCode": 200,
+            "status": 1,
+            "url": {
+                "2574370": "https://bijnis.app.link/c0HWxQ6sSKb"
+            }
         }
     }
 ]
