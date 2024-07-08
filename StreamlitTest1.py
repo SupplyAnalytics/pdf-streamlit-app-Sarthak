@@ -150,6 +150,7 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, productcount, UTM
                         product_info = f'{product_name}<br/><br/><font size="18" color="red" style="text-decoration: underline; text-decoration-thickness: 2px;">CLICK </font><font size="18" color="black" style="text-decoration: underline; text-decoration-thickness: 2px;"> For More Info</font>'
                         hyperlink = f'<a href="{deeplink_url}" color="black">{product_info}</a>'
                         p = Paragraph(hyperlink, hyperlink_style)
+                        clicktext = 'CLICK For More Info'
 
                         if len(product_name) <= 20:
                             hyperlink_style.fontSize = 30
@@ -166,7 +167,10 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, productcount, UTM
                         c.setStrokeColor('black')
                         c.setLineWidth(2)
                         c.setFillColor('black')
-                        c.roundRect(x + (((max_image_width) / 2) - (pwidth / 2)) - 5, y + 565, pwidth + 40, 60, radius=10)
+                        if len(product_name) < len(clicktext):
+                            c.roundRect(x + (((max_image_width) / 2) - (pwidth / 2)) - 5,  y + 565,  300, 60, radius=10) 
+                        else:
+                            c.roundRect(x + (((max_image_width) / 2) - (pwidth / 2)) - 5, y + 565, pwidth + 40, 60, radius=10)
                         p.wrapOn(c, max_image_width, max_image_height)
                         p.drawOn(c, x + (((max_image_width) / 2) - (pwidth / 2)), y + 590)
 
