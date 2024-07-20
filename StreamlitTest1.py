@@ -470,7 +470,7 @@ def handle_yesterday_launched_variants(new_df):
             format = st.selectbox("Select PDF Format", ["2x3", "4x5"], index=0)
             st.write(f"You selected: {format}") 
 
-            Aging = st.slider("Select Aging", 0, 30, (0, 30), step=1)
+            Aging = st.slider("Select Aging", 1, 30, (1, 30), step=1)
             st.write(f"You selected: {Aging}")
 
         return Platform, subcategory, price_ranges, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, Aging
