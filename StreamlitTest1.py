@@ -240,11 +240,11 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, productcount, UTM
     if price_range is not None:
         df = df[(df['Avg_Price'] >= price_range[0]) & (df['Avg_Price'] <= price_range[1])]
 
-    if option == "Yesterday Launched Variants":
+    if option == "New Launched Variants":
         if Aging is not None:
             df = df[(df['Aging'] >= Aging[0]) & (df['Aging'] <= Aging[1])]
 
-    if option != "Yesterday Launched Variants":
+    if option != "New Launched Variants":
         if productcount is not None:
             if SellerName != "All":
                 df = df[(df['rankSeller'] <= productcount[1])]
@@ -310,7 +310,7 @@ h1 {
     # Select Box Logic
     option = st.selectbox(
         "Select the required report:",
-        ["Top Performing Variants", "Yesterday Launched Variants"],
+        ["Top Performing Variants", "New Launched Variants"],
         index=0,
         key='report_select'
     )
@@ -342,7 +342,7 @@ h1 {
                         mime="application/pdf"
                 )
             
-        elif option == "Yesterday Launched Variants":
+        elif option == "New Launched Variants":
             Platform, subcategory, price_ranges, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, Aging  = handle_yesterday_launched_variants(new_df)
             if st.button('Process', key='download_button'):
                 viewid = "174857000103979557"
