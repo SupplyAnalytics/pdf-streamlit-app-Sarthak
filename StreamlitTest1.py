@@ -1,4 +1,3 @@
-
 from __future__ import with_statement
 from AnalyticsClient import AnalyticsClient
 import pandas as pd
@@ -228,7 +227,6 @@ def generate_catalogue_pdf(Platform, subcategory, price_range, productcount, UTM
     compressed_output_file = 'sample_catalogue_compressed.pdf'
     max_image_width = 146 + 400
     max_image_height = 175 + 400
-
     df['SubCategory'] = df['SubCategory'].fillna('')
 
     if Platform != "All":
@@ -322,6 +320,7 @@ h1 {
     if st.session_state.submitted:
         if option == "Top Performing Variants":
             Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName = handle_top_performing_variants(subcategory_list_df)
+            Aging = None
             if st.button('Process', key='download_button'):
                 viewid = "174857000100873355"
                 zohoExport(viewid)
@@ -333,7 +332,7 @@ h1 {
                     progress_bar.progress(progress)
                     progress_text.text(f"Estimated time remaining: {int(estimated_time_remaining)} seconds")
                 
-                result = generate_catalogue_pdf(Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, df, option,  update_progress)
+                result = generate_catalogue_pdf(Platform, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, Aging, df, option,  update_progress)
                 with open(result, "rb") as pdf_file:
                     st.download_button(
                         label="Download PDF",
