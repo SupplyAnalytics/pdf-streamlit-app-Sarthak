@@ -232,6 +232,7 @@ def generate_catalogue_pdf(Platform, BrandName, subcategory, price_range, produc
     if Platform != "All":
         df = df[df['Platform'] == Platform]
     if BrandName != "All":
+        st.write(BrandName)
         df = df[df['BrandName'] == BrandName]
     if subcategory != "All":
         df = df[df['SubCategory'] == subcategory]
@@ -243,19 +244,20 @@ def generate_catalogue_pdf(Platform, BrandName, subcategory, price_range, produc
     if option == "New Launched Variants":
         if Aging is not None:
             df = df[(df['Aging'] >= Aging[0]) & (df['Aging'] <= Aging[1])]
-
-    if option != "New Launched Variants":
-        if productcount is not None:
-            if SellerName != "All":
-                df = df[(df['rankSeller'] <= productcount[1])]
-            elif Platform == "BijnisExpress":
-                df = df[df['rankBijExp'] <= productcount[1]]
-            elif Platform == "Production":
-                df = df[df['rankPP'] <= productcount[1]]
-            elif Platform == "Distribution":
-                df = df[df['rankDP'] <= productcount[1]]
-            else:
-                df = df[df['rankOverall'] <= productcount[1]]
+            
+    if BrandName == "All":
+        if option != "New Launched Variants":
+            if productcount is not None:
+                if SellerName != "All":
+                    df = df[(df['rankSeller'] <= productcount[1])]
+                elif Platform == "BijnisExpress":
+                    df = df[df['rankBijExp'] <= productcount[1]]
+                elif Platform == "Production":
+                    df = df[df['rankPP'] <= productcount[1]]
+                elif Platform == "Distribution":
+                    df = df[df['rankDP'] <= productcount[1]]
+                else:
+                    df = df[df['rankOverall'] <= productcount[1]]
 
     if UTM == 'Custom':
         deeplink(UTMSource, UTMCampaign, UTMMedium, df)
@@ -380,6 +382,10 @@ def handle_top_performing_variants(subcategory_list_df):
             UTMSource = "BI_Campaign"
             UTMCampaign = "BI_Campaign"
             UTMMedium = "BI_Campaign"
+
+        filtered_brand = subcategory_list_df['BrandName'].unique().tolist()
+        BrandName = st.selectbox("Select Brand", ["All"] + filtered_brand, index=0)
+        st.write(f"You selected: {BrandName}")
     
     with col2:
         supercategory = st.selectbox("Select SuperCat", ["All", "Footwear", "Apparels"])
@@ -416,11 +422,7 @@ def handle_top_performing_variants(subcategory_list_df):
         st.write(f"You selected: {format}")
 
         price_ranges = st.slider("Select Price Range", 0, 5000, (0, 5000), step=50)
-        st.write(f"You selected: {price_ranges}")
-
-        filtered_brand = subcategory_list_df[subcategory_list_df['BrandName']].unique().tolist()
-        BrandName = st.selectbox("Select Brand", ["All"] + filtered_brand, index=0)
-        st.write(f"You selected: {BrandName}")
+        st.write(f"You selected: {price_ranges}")    
 
         return Platform, BrandName, subcategory, price_ranges, productcount, UTM, UTMSource, UTMCampaign, UTMMedium,  format,  SellerName
 
@@ -440,6 +442,11 @@ def handle_yesterday_launched_variants(new_df):
             UTMSource = "BI_Campaign"
             UTMCampaign = "BI_Campaign"
             UTMMedium = "BI_Campaign"
+        
+        
+        filtered_brand = new_df[new_df['BrandName']].unique().tolist()
+        BrandName = st.selectbox("Select Brand", ["All"] + filtered_brand, index=0)
+        st.write(f"You selected: {BrandName}")
     
     with col2:
         supercategory = st.selectbox("Select SuperCat", ["All", "Footwear", "Apparels"])
@@ -477,10 +484,6 @@ def handle_yesterday_launched_variants(new_df):
 
             Aging = st.slider("Select Aging", 1, 30, (1, 30), step=1)
             st.write(f"You selected: {Aging}")
-
-            filtered_brand = new_df[new_df['BrandName']].unique().tolist()
-            BrandName = st.selectbox("Select Brand", ["All"] + filtered_brand, index=0)
-            st.write(f"You selected: {BrandName}")
 
         return Platform, BrandName, subcategory, price_ranges, UTM, UTMSource, UTMCampaign, UTMMedium, format, SellerName, Aging
     
