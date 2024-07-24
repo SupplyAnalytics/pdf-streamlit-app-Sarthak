@@ -244,7 +244,7 @@ def generate_catalogue_pdf(Platform, BrandName, subcategory, price_range, produc
     if option == "New Launched Variants":
         if Aging is not None:
             df = df[(df['Aging'] >= Aging[0]) & (df['Aging'] <= Aging[1])]
-            
+
     if BrandName == "All":
         if option != "New Launched Variants":
             if productcount is not None:
@@ -444,7 +444,7 @@ def handle_yesterday_launched_variants(new_df):
             UTMMedium = "BI_Campaign"
         
         
-        filtered_brand = new_df[new_df['BrandName']].unique().tolist()
+        filtered_brand = new_df['BrandName'].unique().tolist()
         BrandName = st.selectbox("Select Brand", ["All"] + filtered_brand, index=0)
         st.write(f"You selected: {BrandName}")
     
