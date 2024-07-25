@@ -232,8 +232,8 @@ def generate_catalogue_pdf(Platform, BrandName, subcategory, price_range, produc
     if Platform != "All":
         df = df[df['Platform'] == Platform]
     if BrandName != "All":
-        st.write(BrandName)
-        df = df[df['BrandName'] == BrandName]
+        df = df[df['BrandName'].isin(BrandName)]
+        df['SubCategory'] = df['BrandName']
     if subcategory != "All":
         df = df[df['SubCategory'] == subcategory]
     if SellerName != "All":
@@ -383,9 +383,19 @@ def handle_top_performing_variants(subcategory_list_df):
             UTMCampaign = "BI_Campaign"
             UTMMedium = "BI_Campaign"
 
+
         filtered_brand = subcategory_list_df['BrandName'].unique().tolist()
-        BrandName = st.selectbox("Select Brand", ["All"] + filtered_brand, index=0)
-        st.write(f"You selected: {BrandName}")
+        
+        brands_with_all = ["All"] + filtered_brand
+
+# Use st.multiselect to allow multiple selections
+        BrandName = st.multiselect("Select Brands", brands_with_all, default="All")
+
+        # Handle the selection
+        if "All" in BrandName:
+            st.write("You selected: All brands")
+        else:
+            st.write(f"You selected: {', '.join(BrandName)}")
     
     with col2:
         supercategory = st.selectbox("Select SuperCat", ["All", "Footwear", "Apparels"])
@@ -445,8 +455,17 @@ def handle_yesterday_launched_variants(new_df):
         
         
         filtered_brand = new_df['BrandName'].unique().tolist()
-        BrandName = st.selectbox("Select Brand", ["All"] + filtered_brand, index=0)
-        st.write(f"You selected: {BrandName}")
+        
+        brands_with_all = ["All"] + filtered_brand
+
+# Use st.multiselect to allow multiple selections
+        BrandName = st.multiselect("Select Brands", brands_with_all, default="All")
+
+        # Handle the selection
+        if "All" in BrandName:
+            st.write("You selected: All brands")
+        else:
+            st.write(f"You selected: {', '.join(BrandName)}")
     
     with col2:
         supercategory = st.selectbox("Select SuperCat", ["All", "Footwear", "Apparels"])
