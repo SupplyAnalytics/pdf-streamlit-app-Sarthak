@@ -231,7 +231,7 @@ def generate_catalogue_pdf(Platform, BrandName, subcategory, price_range, produc
 
     if Platform != "All":
         df = df[df['Platform'] == Platform]
-    if BrandName != "All":
+    if BrandName != ["All"]:
         df = df[df['BrandName'].isin(BrandName)]
         df['SubCategory'] = df['BrandName']
     if subcategory != "All":
