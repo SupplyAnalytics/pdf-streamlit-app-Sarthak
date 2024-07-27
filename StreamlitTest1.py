@@ -227,11 +227,13 @@ def generate_catalogue_pdf(Platform, BrandName, subcategory, price_range, produc
     compressed_output_file = 'sample_catalogue_compressed.pdf'
     max_image_width = 146 + 400
     max_image_height = 175 + 400
+    print(df.head())
     df['SubCategory'] = df['SubCategory'].fillna('')
+    print(BrandName)
 
     if Platform != "All":
         df = df[df['Platform'] == Platform]
-    if BrandName != "All":
+    if BrandName != ['All']:
         df = df[df['BrandName'].isin(BrandName)]
         df['SubCategory'] = df['BrandName']
     if subcategory != "All":
@@ -241,9 +243,12 @@ def generate_catalogue_pdf(Platform, BrandName, subcategory, price_range, produc
     if price_range is not None:
         df = df[(df['Avg_Price'] >= price_range[0]) & (df['Avg_Price'] <= price_range[1])]
 
+
     if option == "New Launched Variants":
+        print("New Launched Variants")
         if Aging is not None:
             df = df[(df['Aging'] >= Aging[0]) & (df['Aging'] <= Aging[1])]
+            # df = df[df['Aging']==Aging[1]]
 
     if BrandName == "All":
         if option != "New Launched Variants":
